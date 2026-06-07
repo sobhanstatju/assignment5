@@ -1,12 +1,34 @@
 Package: project2026
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Statistical Analysis of Height, Weight and Physical Activity
+Version: 0.1.0
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person(
+      given   = "Your",
+      family  = "Name",
+      email   = "your.name@students.mq.edu.au",
+      role    = c("aut", "cre"),
+      comment = c(ORCID = "")
+    )
+Description: Provides wrapper functions for three statistical analyses
+    performed on the project2026 dataset: (1) simple linear regression of
+    weight on height, (2) an independent-samples t-test comparing mean
+    heights across genders, and (3) a chi-square test of independence
+    between gender and physical activity level.  Each wrapper returns a
+    structured list with a custom S3 print() method.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Config/Needs/website: rmarkdown
+Depends:
+    R (>= 4.1.0)
+Imports:
+    ggplot2,
+    stats,
+    rlang
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+LazyData: true
+VignetteBuilder: knitr
