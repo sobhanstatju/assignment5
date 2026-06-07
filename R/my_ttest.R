@@ -1,8 +1,8 @@
 #' Test Whether Mean Height is the Same for Males and Females
 #'
-#' Performs a two-sample independent *t*-test (equal variances assumed) to
+#' Performs a two-sample independent t-test (equal variances assumed) to
 #' compare the mean heights of male and female participants.  Produces a
-#' boxplot and per-group normal Q–Q plots as assumption checks.
+#' boxplot and per-group normal Q-Q plots as assumption checks.
 #'
 #' @param data A data frame containing at least the columns `height` (numeric,
 #'   cm) and `gender` (character or factor with levels `"Male"` and
@@ -10,20 +10,18 @@
 #' @param alpha Significance level.  Default `0.05`.
 #' @param plot  Logical.  If `TRUE` (default) assumption plots are printed.
 #'
-#' @return An object of class `"ttest_result"` (a named list) with elements:
-#' \describe{
-#'   \item{hypotheses}{Character vector stating H0 and H1.}
-#'   \item{group_summary}{Data frame of per-group means and SDs.}
-#'   \item{test}{The `htest` object returned by `t.test()`.}
-#'   \item{test_statistic}{Numeric t-statistic.}
-#'   \item{df}{Degrees of freedom.}
-#'   \item{p_value}{Numeric p-value.}
-#'   \item{conf_int}{95\% confidence interval for the difference in means.}
-#'   \item{alpha}{Significance level used.}
-#'   \item{decision}{Character: "Reject H0" or "Fail to reject H0".}
-#'   \item{conclusion}{Plain-English conclusion.}
-#'   \item{plots}{Named list of `ggplot` objects (boxplot, qq).}
-#' }
+#' @return An object of class `"ttest_result"` (a named list) containing:
+#' * `hypotheses` — character vector stating H0 and H1
+#' * `group_summary` — data frame of per-group means and SDs
+#' * `test` — the `htest` object returned by `t.test()`
+#' * `test_statistic` — numeric t-statistic
+#' * `df` — degrees of freedom
+#' * `p_value` — numeric p-value
+#' * `conf_int` — 95% confidence interval for the difference in means
+#' * `alpha` — significance level used
+#' * `decision` — character: "Reject H0" or "Fail to reject H0"
+#' * `conclusion` — plain-English conclusion
+#' * `plots` — named list of ggplot objects (boxplot, qq)
 #'
 #' @examples
 #' data(project2026_data)
@@ -37,20 +35,20 @@
 #' @export
 my_ttest <- function(data, alpha = 0.05, plot = TRUE) {
 
-  # ── Input checks ────────────────────────────────────────────────────────────
+  # -- Input checks ------------------------------------------------------------
   stopifnot(is.data.frame(data))
   stopifnot(all(c("height", "gender") %in% names(data)))
   stopifnot(is.numeric(alpha), length(alpha) == 1L, alpha > 0, alpha < 1)
 
   data$gender <- factor(data$gender, levels = c("Male", "Female"))
 
-  # ── 1. Hypotheses ────────────────────────────────────────────────────────────
+  # -- 1. Hypotheses -----------------------------------------------------------
   hyp <- c(
     H0 = "H0: mu_Male = mu_Female  (mean heights are equal)",
     H1 = "H1: mu_Male != mu_Female (mean heights differ)"
   )
 
-  # ── 2. Numerical summary ────────────────────────────────────────────────────
+  # -- 2. Numerical summary ----------------------------------------------------
   grp_sum <- do.call(rbind, lapply(levels(data$gender), function(g) {
     x <- data$height[data$gender == g]
     data.frame(
@@ -62,7 +60,7 @@ my_ttest <- function(data, alpha = 0.05, plot = TRUE) {
     )
   }))
 
-  # ── 2. Graphical summaries ──────────────────────────────────────────────────
+  # -- 2. Graphical summaries --------------------------------------------------
   pal <- c("Male" = "#2166AC", "Female" = "#D6604D")
 
   p_box <- ggplot2::ggplot(data,
@@ -97,17 +95,17 @@ my_ttest <- function(data, alpha = 0.05, plot = TRUE) {
     print(p_qq)
   }
 
-  # ── 3. Fit the test ──────────────────────────────────────────────────────────
+  # -- 3. Fit the test ---------------------------------------------------------
   tt      <- stats::t.test(height ~ gender, data = data, var.equal = TRUE)
   t_stat  <- tt$statistic
   df_val  <- tt$parameter
   p_val   <- tt$p.value
   ci      <- tt$conf.int
 
-  # ── 4. Decision ───────────────────────────────────────────────────────────
+  # -- 4. Decision -------------------------------------------------------------
   dec <- decision(p_val, alpha)
 
-  # ── 5. Conclusion ─────────────────────────────────────────────────────────
+  # -- 5. Conclusion -----------------------------------------------------------
   mean_m   <- grp_sum$mean[grp_sum$gender == "Male"]
   mean_f   <- grp_sum$mean[grp_sum$gender == "Female"]
   diff_val <- round(mean_m - mean_f, 3)
@@ -131,7 +129,7 @@ my_ttest <- function(data, alpha = 0.05, plot = TRUE) {
     )
   }
 
-  # ── Return ────────────────────────────────────────────────────────────────
+  # -- Return ------------------------------------------------------------------
   result <- list(
     hypotheses     = hyp,
     group_summary  = grp_sum,
@@ -150,9 +148,9 @@ my_ttest <- function(data, alpha = 0.05, plot = TRUE) {
 }
 
 
-#' Print method for `ttest_result` objects
+#' Print method for ttest_result objects
 #'
-#' Displays a formatted summary of the two-sample *t*-test results.
+#' Displays a formatted summary of the two-sample t-test results.
 #'
 #' @param x   An object of class `"ttest_result"`.
 #' @param ... Further arguments passed to or from other methods (ignored).
@@ -160,19 +158,19 @@ my_ttest <- function(data, alpha = 0.05, plot = TRUE) {
 #' @return `x`, invisibly.
 #' @export
 print.ttest_result <- function(x, ...) {
-  cat("══════════════════════════════════════════════════════════\n")
-  cat(" Research Question 2: Mean Height — Male vs. Female\n")
-  cat("══════════════════════════════════════════════════════════\n\n")
+  cat("===========================================================\n")
+  cat(" Research Question 2: Mean Height - Male vs. Female\n")
+  cat("===========================================================\n\n")
 
-  cat("── Hypotheses ──────────────────────────────────────────\n")
+  cat("-- Hypotheses ----------------------------------------------\n")
   cat(" ", x$hypotheses["H0"], "\n")
   cat(" ", x$hypotheses["H1"], "\n\n")
 
-  cat("── Assumption Checks ───────────────────────────────────\n")
+  cat("-- Assumption Checks ---------------------------------------\n")
   cat("  See boxplot (distribution) and Q-Q plots (normality).\n")
   cat("  Equal variances assumed as stated in the question.\n\n")
 
-  cat("── Group Summary ───────────────────────────────────────\n")
+  cat("-- Group Summary -------------------------------------------\n")
   print(x$group_summary, row.names = FALSE)
   cat("\n")
 
@@ -187,13 +185,13 @@ print.ttest_result <- function(x, ...) {
   cat(sprintf("  95%% CI      : [%.3f, %.3f] cm\n\n",
               x$conf_int[1], x$conf_int[2]))
 
-  cat(sprintf("── Decision (alpha = %.2f) ───────────────────────────\n",
+  cat(sprintf("-- Decision (alpha = %.2f) ---------------------------\n",
               x$alpha))
   cat(" ", x$decision, "\n\n")
 
-  cat("── Conclusion ──────────────────────────────────────────\n")
+  cat("-- Conclusion ----------------------------------------------\n")
   cat(strwrap(x$conclusion, width = 58, prefix = "  "), sep = "\n")
-  cat("\n══════════════════════════════════════════════════════════\n")
+  cat("\n===========================================================\n")
 
   invisible(x)
 }

@@ -3,27 +3,25 @@
 #' Fits a simple linear regression of `weight` on `height` and tests whether
 #' the slope is zero.  Produces numerical and graphical assumption checks
 #' (scatter plot with regression line, residuals-vs-fitted plot, and a normal
-#' Q–Q plot of residuals).
+#' Q-Q plot of residuals).
 #'
 #' @param data A data frame containing at least the columns `height` (numeric,
 #'   cm) and `weight` (numeric, kg).
 #' @param alpha Significance level for the hypothesis test.  Default `0.05`.
 #' @param plot  Logical.  If `TRUE` (default) diagnostic plots are printed.
 #'
-#' @return An object of class `"lm_result"` (a named list) with elements:
-#' \describe{
-#'   \item{hypotheses}{Character vector stating H0 and H1.}
-#'   \item{model}{The fitted `lm` object.}
-#'   \item{coefficients}{Data frame of coefficient estimates.}
-#'   \item{r_squared}{Numeric R-squared value.}
-#'   \item{test_statistic}{Numeric t-statistic for the slope.}
-#'   \item{df}{Degrees of freedom.}
-#'   \item{p_value}{Numeric p-value for the slope test.}
-#'   \item{alpha}{Significance level used.}
-#'   \item{decision}{Character: "Reject H0" or "Fail to reject H0".}
-#'   \item{conclusion}{Plain-English conclusion.}
-#'   \item{plots}{Named list of `ggplot` objects (scatter, residuals, qq).}
-#' }
+#' @return An object of class `"lm_result"` (a named list) containing:
+#' * `hypotheses` — character vector stating H0 and H1
+#' * `model` — the fitted `lm` object
+#' * `coefficients` — data frame of coefficient estimates
+#' * `r_squared` — numeric R-squared value
+#' * `test_statistic` — numeric t-statistic for the slope
+#' * `df` — degrees of freedom
+#' * `p_value` — numeric p-value for the slope test
+#' * `alpha` — significance level used
+#' * `decision` — character: "Reject H0" or "Fail to reject H0"
+#' * `conclusion` — plain-English conclusion
+#' * `plots` — named list of ggplot objects (scatter, residuals, qq)
 #'
 #' @examples
 #' data(project2026_data)
@@ -37,31 +35,31 @@
 #' @export
 linear_reg <- function(data, alpha = 0.05, plot = TRUE) {
 
-  # ── Input checks ────────────────────────────────────────────────────────────
+  # -- Input checks ------------------------------------------------------------
   stopifnot(is.data.frame(data))
   stopifnot(all(c("height", "weight") %in% names(data)))
   stopifnot(is.numeric(alpha), length(alpha) == 1L, alpha > 0, alpha < 1)
 
-  # ── 1. Hypotheses ────────────────────────────────────────────────────────────
+  # -- 1. Hypotheses -----------------------------------------------------------
   hyp <- c(
     H0 = "H0: beta_1 = 0  (no linear relationship between height and weight)",
     H1 = "H1: beta_1 != 0 (a linear relationship exists)"
   )
 
-  # ── 2. Assumption checks — graphical summaries ────────────────────────────
+  # -- 2. Assumption checks — graphical summaries ------------------------------
   p_scatter <- ggplot2::ggplot(data,
                                ggplot2::aes(x = .data$height, y = .data$weight)) +
     ggplot2::geom_point(alpha = 0.35, size = 1.2, colour = "#2166AC") +
     ggplot2::geom_smooth(method = "lm", formula = y ~ x,
                          colour = "black", linewidth = 0.9) +
     ggplot2::labs(
-      title = "Assumption check: Linearity",
+      title    = "Assumption check: Linearity",
       subtitle = "Scatter plot of weight vs. height with regression line",
       x = "Height (cm)", y = "Weight (kg)"
     ) +
     ggplot2::theme_bw(base_size = 11)
 
-  # ── 3. Fit the model ──────────────────────────────────────────────────────
+  # -- 3. Fit the model --------------------------------------------------------
   fit      <- stats::lm(weight ~ height, data = data)
   fit_sum  <- summary(fit)
   coef_df  <- as.data.frame(fit_sum$coefficients)
@@ -76,7 +74,7 @@ linear_reg <- function(data, alpha = 0.05, plot = TRUE) {
   r2        <- fit_sum$r.squared
   df_resid  <- fit$df.residual
 
-  # ── Diagnostic plots ───────────────────────────────────────────────────────
+  # -- Diagnostic plots --------------------------------------------------------
   diag_df <- data.frame(
     fitted    = stats::fitted(fit),
     residuals = stats::residuals(fit)
@@ -110,10 +108,10 @@ linear_reg <- function(data, alpha = 0.05, plot = TRUE) {
     print(p_qq)
   }
 
-  # ── 4. Decision ───────────────────────────────────────────────────────────
+  # -- 4. Decision -------------------------------------------------------------
   dec <- decision(p_val, alpha)
 
-  # ── 5. Conclusion ─────────────────────────────────────────────────────────
+  # -- 5. Conclusion -----------------------------------------------------------
   slope_est <- round(slope_row$Estimate, 3)
   p_fmt     <- format_pvalue(p_val)
 
@@ -134,7 +132,7 @@ linear_reg <- function(data, alpha = 0.05, plot = TRUE) {
     )
   }
 
-  # ── Return ────────────────────────────────────────────────────────────────
+  # -- Return ------------------------------------------------------------------
   result <- list(
     hypotheses     = hyp,
     model          = fit,
@@ -155,7 +153,7 @@ linear_reg <- function(data, alpha = 0.05, plot = TRUE) {
 }
 
 
-#' Print method for `lm_result` objects
+#' Print method for lm_result objects
 #'
 #' Displays a formatted summary of the linear regression test results.
 #'
@@ -165,19 +163,19 @@ linear_reg <- function(data, alpha = 0.05, plot = TRUE) {
 #' @return `x`, invisibly.
 #' @export
 print.lm_result <- function(x, ...) {
-  cat("══════════════════════════════════════════════════════════\n")
-  cat(" Research Question 1: Linear Relationship — Height vs. Weight\n")
-  cat("══════════════════════════════════════════════════════════\n\n")
+  cat("===========================================================\n")
+  cat(" Research Question 1: Linear Relationship - Height vs. Weight\n")
+  cat("===========================================================\n\n")
 
-  cat("── Hypotheses ──────────────────────────────────────────\n")
+  cat("-- Hypotheses ----------------------------------------------\n")
   cat(" ", x$hypotheses["H0"], "\n")
   cat(" ", x$hypotheses["H1"], "\n\n")
 
-  cat("── Assumption Checks ───────────────────────────────────\n")
+  cat("-- Assumption Checks ---------------------------------------\n")
   cat("  See scatter plot (linearity), residuals vs. fitted\n")
   cat("  (homoscedasticity), and Q-Q plot (normality).\n\n")
 
-  cat("── Coefficient Table ───────────────────────────────────\n")
+  cat("-- Coefficient Table ---------------------------------------\n")
   cf <- x$coefficients
   cf$Estimate  <- round(cf$Estimate,  4)
   cf$Std.Error <- round(cf$Std.Error, 4)
@@ -191,16 +189,15 @@ print.lm_result <- function(x, ...) {
   cat(sprintf("  t-stat    : %.4f  (df = %d)\n",
               x$test_statistic, x$df))
   cat(sprintf("  p-value   : %s  %s\n\n",
-              format_pvalue(x$p_value),
-              sig_stars(x$p_value)))
+              format_pvalue(x$p_value), sig_stars(x$p_value)))
 
-  cat(sprintf("── Decision (alpha = %.2f) ───────────────────────────\n",
+  cat(sprintf("-- Decision (alpha = %.2f) ---------------------------\n",
               x$alpha))
   cat(" ", x$decision, "\n\n")
 
-  cat("── Conclusion ──────────────────────────────────────────\n")
+  cat("-- Conclusion ----------------------------------------------\n")
   cat(strwrap(x$conclusion, width = 58, prefix = "  "), sep = "\n")
-  cat("\n══════════════════════════════════════════════════════════\n")
+  cat("\n===========================================================\n")
 
   invisible(x)
 }

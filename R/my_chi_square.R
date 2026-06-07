@@ -2,9 +2,8 @@
 #'
 #' Performs Pearson's chi-square test of independence on a contingency table
 #' of gender by physical activity level.  Missing values in the activity
-#' column are recoded as `"None"` before testing (consistent with the dataset
-#' documentation).  Produces a stacked bar chart and the expected-counts table
-#' as assumption checks.
+#' column are recoded as `"None"` before testing.  Produces a stacked bar
+#' chart and the expected-counts table as assumption checks.
 #'
 #' @param data A data frame containing at least the columns `gender`
 #'   (character or factor) and `phys` (character or factor with levels
@@ -12,21 +11,20 @@
 #' @param alpha Significance level.  Default `0.05`.
 #' @param plot  Logical.  If `TRUE` (default) the bar chart is printed.
 #'
-#' @return An object of class `"chisq_result"` (a named list) with elements:
-#' \describe{
-#'   \item{hypotheses}{Character vector stating H0 and H1.}
-#'   \item{observed}{Contingency table of observed counts.}
-#'   \item{expected}{Matrix of expected counts under H0.}
-#'   \item{min_expected}{Minimum expected cell count (assumption check).}
-#'   \item{test}{The `htest` object returned by `chisq.test()`.}
-#'   \item{test_statistic}{Numeric chi-square statistic.}
-#'   \item{df}{Degrees of freedom.}
-#'   \item{p_value}{Numeric p-value.}
-#'   \item{alpha}{Significance level used.}
-#'   \item{decision}{Character: "Reject H0" or "Fail to reject H0".}
-#'   \item{conclusion}{Plain-English conclusion.}
-#'   \item{plots}{Named list of `ggplot` objects (bar).}
-#' }
+#' @return An object of class `"chisq_result"` (a named list) containing:
+#' * `hypotheses` — character vector stating H0 and H1
+#' * `observed` — contingency table of observed counts
+#' * `expected` — matrix of expected counts under H0
+#' * `min_expected` — minimum expected cell count (assumption check)
+#' * `assumption_note` — character string summarising the assumption check
+#' * `test` — the `htest` object returned by `chisq.test()`
+#' * `test_statistic` — numeric chi-square statistic
+#' * `df` — degrees of freedom
+#' * `p_value` — numeric p-value
+#' * `alpha` — significance level used
+#' * `decision` — character: "Reject H0" or "Fail to reject H0"
+#' * `conclusion` — plain-English conclusion
+#' * `plots` — named list of ggplot objects (bar)
 #'
 #' @examples
 #' data(project2026_data)
@@ -40,28 +38,28 @@
 #' @export
 my_chi_square <- function(data, alpha = 0.05, plot = TRUE) {
 
-  # ── Input checks ────────────────────────────────────────────────────────────
+  # -- Input checks ------------------------------------------------------------
   stopifnot(is.data.frame(data))
   stopifnot(all(c("gender", "phys") %in% names(data)))
   stopifnot(is.numeric(alpha), length(alpha) == 1L, alpha > 0, alpha < 1)
 
-  # Recode NA -> "None" (documented missing-level meaning)
+  # Recode NA -> "None"
   data$phys   <- ifelse(is.na(data$phys), "None", as.character(data$phys))
   data$phys   <- factor(data$phys,   levels = c("None", "Moderate", "Intense"))
   data$gender <- factor(data$gender, levels = c("Male", "Female"))
 
-  # ── 1. Hypotheses ────────────────────────────────────────────────────────────
+  # -- 1. Hypotheses -----------------------------------------------------------
   hyp <- c(
     H0 = paste0("H0: Gender and physical activity are independent",
                 " (p_ij = p_i. * p_.j for all i,j)"),
     H1 = "H1: Gender and physical activity are NOT independent"
   )
 
-  # ── 2. Observed contingency table ───────────────────────────────────────────
+  # -- 2. Observed contingency table -------------------------------------------
   obs_tbl <- table(Gender = data$gender,
                    `Physical Activity` = data$phys)
 
-  # ── 2. Graphical summary ────────────────────────────────────────────────────
+  # -- 2. Graphical summary ----------------------------------------------------
   plot_df <- as.data.frame(obs_tbl)
   names(plot_df) <- c("gender", "phys", "n")
   plot_df <- do.call(rbind, lapply(levels(data$gender), function(g) {
@@ -88,7 +86,7 @@ my_chi_square <- function(data, alpha = 0.05, plot = TRUE) {
 
   if (plot) print(p_bar)
 
-  # ── 3. Chi-square test ───────────────────────────────────────────────────────
+  # -- 3. Chi-square test ------------------------------------------------------
   chi_res   <- stats::chisq.test(obs_tbl)
   exp_mat   <- chi_res$expected
   min_exp   <- min(exp_mat)
@@ -96,10 +94,10 @@ my_chi_square <- function(data, alpha = 0.05, plot = TRUE) {
   chi_df    <- chi_res$parameter
   p_val     <- chi_res$p.value
 
-  # ── 4. Decision ───────────────────────────────────────────────────────────
+  # -- 4. Decision -------------------------------------------------------------
   dec <- decision(p_val, alpha)
 
-  # ── 5. Conclusion ─────────────────────────────────────────────────────────
+  # -- 5. Conclusion -----------------------------------------------------------
   p_fmt <- format_pvalue(p_val)
 
   assump_note <- if (min_exp >= 5) {
@@ -128,7 +126,7 @@ my_chi_square <- function(data, alpha = 0.05, plot = TRUE) {
     )
   }
 
-  # ── Return ────────────────────────────────────────────────────────────────
+  # -- Return ------------------------------------------------------------------
   result <- list(
     hypotheses      = hyp,
     observed        = obs_tbl,
@@ -149,7 +147,7 @@ my_chi_square <- function(data, alpha = 0.05, plot = TRUE) {
 }
 
 
-#' Print method for `chisq_result` objects
+#' Print method for chisq_result objects
 #'
 #' Displays a formatted summary of the chi-square test of independence results.
 #'
@@ -159,23 +157,23 @@ my_chi_square <- function(data, alpha = 0.05, plot = TRUE) {
 #' @return `x`, invisibly.
 #' @export
 print.chisq_result <- function(x, ...) {
-  cat("══════════════════════════════════════════════════════════\n")
+  cat("===========================================================\n")
   cat(" Research Question 3: Gender vs. Physical Activity\n")
-  cat("══════════════════════════════════════════════════════════\n\n")
+  cat("===========================================================\n\n")
 
-  cat("── Hypotheses ──────────────────────────────────────────\n")
+  cat("-- Hypotheses ----------------------------------------------\n")
   cat(strwrap(x$hypotheses["H0"], width = 58, prefix = "  "), sep = "\n")
   cat(" ", x$hypotheses["H1"], "\n\n")
 
-  cat("── Assumption Check ────────────────────────────────────\n")
+  cat("-- Assumption Check ----------------------------------------\n")
   cat(strwrap(x$assumption_note, width = 58, prefix = "  "), sep = "\n")
   cat("\n")
 
-  cat("── Observed Counts ─────────────────────────────────────\n")
+  cat("-- Observed Counts -----------------------------------------\n")
   print(x$observed)
   cat("\n")
 
-  cat("── Expected Counts (under H0) ──────────────────────────\n")
+  cat("-- Expected Counts (under H0) ------------------------------\n")
   print(round(x$expected, 2))
   cat("\n")
 
@@ -185,13 +183,13 @@ print.chisq_result <- function(x, ...) {
               format_pvalue(x$p_value), sig_stars(x$p_value)))
   cat("\n")
 
-  cat(sprintf("── Decision (alpha = %.2f) ───────────────────────────\n",
+  cat(sprintf("-- Decision (alpha = %.2f) ---------------------------\n",
               x$alpha))
   cat(" ", x$decision, "\n\n")
 
-  cat("── Conclusion ──────────────────────────────────────────\n")
+  cat("-- Conclusion ----------------------------------------------\n")
   cat(strwrap(x$conclusion, width = 58, prefix = "  "), sep = "\n")
-  cat("\n══════════════════════════════════════════════════════════\n")
+  cat("\n===========================================================\n")
 
   invisible(x)
 }

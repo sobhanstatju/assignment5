@@ -26,9 +26,11 @@ Imports:
     stats,
     rlang
 Suggests:
-    testthat (>= 3.0.0),
+    testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    readr,
+    dplyr
 Config/testthat/edition: 3
-LazyData: true
+LazyData: false
 VignetteBuilder: knitr
