@@ -1,8 +1,8 @@
 # project2026
 
-> Student: Md Abdus Sobhan
-> SID: 48631396
-> GitHub: sobhanstatju
+> Student: Md Abdus Sobhan |
+> SID: 48631396 |
+> GitHub: sobhanstatju |
 > MQ Email: mdabdus.sobhan@students.mq.edu.au
 
 ---
